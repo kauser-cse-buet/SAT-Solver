@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-11.0.2">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="sat.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/Example%20SAT%20Solver/sat.jar!/doc"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="solvers/brute.jar"/>
+	<classpathentry kind="lib" path="solvers/dpll.jar"/>
+	<classpathentry kind="lib" path="solvers/gsat.jar"/>
+	<classpathentry kind="lib" path="solvers/walksat.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

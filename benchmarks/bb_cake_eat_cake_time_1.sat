@@ -1,0 +1,1 @@
+(and (or eaten_cake_1) (or (not have_cake_1) persist_have_cake_1) (or (not not_have_cake_1) eat_cake_1) (or (not eaten_cake_1) eat_cake_1) (or (not eat_cake_1) have_cake_0) (or (not persist_have_cake_1) have_cake_0) (or (not persist_have_cake_1) (not eat_cake_1)) (or (not have_cake_1) (not not_have_cake_1)) (or (not not_have_cake_1) (not have_cake_1)) (or have_cake_0))

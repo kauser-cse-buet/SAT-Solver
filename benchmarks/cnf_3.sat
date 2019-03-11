@@ -1,0 +1,5 @@
+(and (or A B C)
+     (not B)
+	 (or A D)
+	 (or C D)
+	 (not C))

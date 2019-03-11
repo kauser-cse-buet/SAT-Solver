@@ -1,0 +1,1 @@
+(and (or A B) (or (not A) B))
