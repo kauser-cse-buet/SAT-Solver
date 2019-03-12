@@ -26,7 +26,7 @@ public class Test {
 	 * test against certain ones.
 	 */
 	private static final Solver[] SOLVERS = new Solver[] {
-		new RandomSolver(),
+		new MahmmedSolver(),
 		new BruteForceSolver(),
 		new DPLL(),
 		new GSAT(),

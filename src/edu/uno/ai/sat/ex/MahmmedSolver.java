@@ -12,7 +12,7 @@ import edu.uno.ai.sat.Variable;
  * 
  * @author Your Name
  */
-public class RandomSolver extends Solver {
+public class MahmmedSolver extends Solver {
 
 	private final Random random = new Random(0);
 	
@@ -22,8 +22,8 @@ public class RandomSolver extends Solver {
 	 * In Eclipse, you can do that easily by right-clicking on this file
 	 * (RandomAgent.java) in the Package Explorer and choosing Refactor > Rename.
 	 */
-	public RandomSolver() {
-		super("random");
+	public MahmmedSolver() {
+		super("mahmmed");
 	}
 
 	@Override
