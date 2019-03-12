@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import edu.uno.ai.sat.Assignment;
+import edu.uno.ai.sat.Clause;
 import edu.uno.ai.sat.Solver;
 import edu.uno.ai.sat.Value;
 import edu.uno.ai.sat.Variable;
@@ -26,6 +27,7 @@ public class MahmmedSolver extends Solver {
 		super("mahmmed");
 	}
 
+	/*
 	@Override
 	public boolean solve(Assignment assignment) {
 		// If the problem has no variables, it is trivially true or false.
@@ -50,7 +52,53 @@ public class MahmmedSolver extends Solver {
 			return true;
 		}
 	}
+	*/
 	
+	@Override
+	public boolean solve(Assignment assignment) {
+		// If the problem has no variables, it is trivially true or false.
+		if(assignment.problem.variables.size() == 0)
+			return assignment.getValue() == Value.TRUE;
+		else {
+			
+			
+
+			if(assignment.getValue() == Value.TRUE) {
+				return true;
+			}
+			
+			
+			if(assignment.getValue() == Value.FALSE) {
+				return false;
+			}
+			
+			Variable variable = chooseUnassignedVariable(assignment);
+			
+			if(tryValue(assignment, variable, Value.FALSE)) {
+				return true;
+			}
+			
+			if(tryValue(assignment, variable, Value.TRUE)) {
+				return true;
+			}
+			
+			return false;
+			
+		}
+	}
+	
+	private boolean tryValue(Assignment assignment, Variable variable, Value value) {
+        Value actualValue = assignment.getValue(variable);
+        assignment.setValue(variable, value);
+        if (solve(assignment)) {
+            return true;
+        }
+        else {
+	        assignment.setValue(variable, actualValue);
+	        return false;
+        }
+	}
+
 	/**
 	 * Randomly choose a variable from the problem whose value will be set. If
 	 * any variables have the value 'unknown,' choose one of those first;
@@ -74,4 +122,23 @@ public class MahmmedSolver extends Solver {
 		else
 			return assignment.problem.variables.get(random.nextInt(assignment.problem.variables.size()));
 	}
+	
+	private final Variable chooseUnassignedVariable(Assignment assignment) {
+		// This list will hold all variables whose current value is 'unknown.'
+		ArrayList<Variable> unknown = new ArrayList<>();
+		// Loop through all the variables in the problem and find ones whose
+		// current value is 'unknown.'
+		for(Variable variable : assignment.problem.variables)
+			if(assignment.getValue(variable) == Value.UNKNOWN)
+				unknown.add(variable);
+		// If any variables are 'unknown,' choose one of them randomly.
+		if(unknown.size() > 0)
+//			return unknown.get(random.nextInt(unknown.size()));
+			return unknown.get(0);
+		// Otherwise, choose any variable from the problem at random.
+		else
+			return null;
+	}
+	
+	
 }

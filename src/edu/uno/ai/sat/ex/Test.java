@@ -48,7 +48,7 @@ public class Test {
 //		"benchmarks/cnf_1.sat",
 //		"benchmarks/cnf_2.sat",
 //		"benchmarks/cnf_3.sat",
-		"benchmarks/graph_coloring_easy_1.sat",
+//		"benchmarks/graph_coloring_easy_1.sat",
 //		"benchmarks/graph_coloring_easy_2.sat",
 //		"benchmarks/graph_coloring_easy_3.sat",
 //		"benchmarks/graph_coloring_easy_4.sat",
@@ -90,7 +90,7 @@ public class Test {
 //		"benchmarks/bb_cargo_deliver_return_1_time_4.sat",
 //		"benchmarks/bb_cargo_deliver_return_2_time_4.sat",
 //		"benchmarks/bb_wumpus_easy_wumpus_time_3.sat",
-//		"benchmarks/bb_wumpus_medium_wumpus_time_7.sat",
+		"benchmarks/bb_wumpus_medium_wumpus_time_7.sat"
 	};
 
 	/**
@@ -109,6 +109,10 @@ public class Test {
 		}
 		try(Writer output = new BufferedWriter(new FileWriter("results.html"))) {
 			Main.benchmark(SOLVERS, problems, Settings.OPERATIONS_LIMIT, Settings.TIME_LIMIT, output);
+		}
+		catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e);
 		}
 	}
 }
