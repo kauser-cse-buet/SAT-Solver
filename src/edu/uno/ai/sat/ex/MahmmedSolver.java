@@ -1,10 +1,12 @@
 package edu.uno.ai.sat.ex;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 
 import edu.uno.ai.sat.Assignment;
 import edu.uno.ai.sat.Clause;
+import edu.uno.ai.sat.Literal;
 import edu.uno.ai.sat.Solver;
 import edu.uno.ai.sat.Value;
 import edu.uno.ai.sat.Variable;
@@ -60,7 +62,7 @@ public class MahmmedSolver extends Solver {
 		if(assignment.problem.variables.size() == 0)
 			return assignment.getValue() == Value.TRUE;
 		else {
-			
+
 			
 
 			if(assignment.getValue() == Value.TRUE) {
@@ -72,6 +74,36 @@ public class MahmmedSolver extends Solver {
 				return false;
 			}
 			
+//			unitPropagation
+			
+			for (Clause clause : assignment.problem.clauses) {
+
+				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) == 1) {
+					
+					Literal literal = null;
+					
+					for (Literal l : clause.literals) {
+						if(assignment.getValue(l) == Value.UNKNOWN) {
+							literal = l;
+						}	
+					}
+					Variable variable = literal.variable;
+					
+					Value value = Value.FALSE;
+					if(literal.valence) {
+						value = Value.TRUE;
+					}
+					
+					if(!tryValue(assignment, variable, value)) {
+						return false;
+					}
+					else {
+						return true;
+					}
+				}
+			}
+			
+
 			Variable variable = chooseUnassignedVariable(assignment);
 			
 			if(tryValue(assignment, variable, Value.FALSE)) {
@@ -82,11 +114,12 @@ public class MahmmedSolver extends Solver {
 				return true;
 			}
 			
+			
 			return false;
 			
 		}
 	}
-	
+
 	private boolean tryValue(Assignment assignment, Variable variable, Value value) {
         Value actualValue = assignment.getValue(variable);
         assignment.setValue(variable, value);
