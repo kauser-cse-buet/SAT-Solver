@@ -62,9 +62,6 @@ public class MahmmedSolver extends Solver {
 		if(assignment.problem.variables.size() == 0)
 			return assignment.getValue() == Value.TRUE;
 		else {
-
-			
-
 			if(assignment.getValue() == Value.TRUE) {
 				return true;
 			}
@@ -73,6 +70,10 @@ public class MahmmedSolver extends Solver {
 			if(assignment.getValue() == Value.FALSE) {
 				return false;
 			}
+
+			
+
+
 			
 //			unitPropagation
 			
@@ -102,6 +103,37 @@ public class MahmmedSolver extends Solver {
 					}
 				}
 			}
+			
+			// pure variables
+			
+			for (Variable variable : assignment.problem.variables) {
+				int countTrue = 0;
+				int countFalse = 0;
+				if(assignment.getValue(variable) == Value.UNKNOWN) {
+					for (Literal literal : variable.literals) {
+						if(literal.valence) {
+							countTrue += 1;
+						}
+						else {
+							countFalse += 1;
+						}
+						
+					}
+					
+					if (countFalse == 0 && countTrue > 0) {
+						return tryValue(assignment, variable, Value.TRUE);
+					}
+					else if(countTrue == 0 && countFalse > 0) {
+						// its pure variable
+						return tryValue(assignment, variable, Value.FALSE);
+					}
+					
+					
+				}
+				
+			}
+			
+			
 			
 
 			Variable variable = chooseUnassignedVariable(assignment);
