@@ -3,6 +3,7 @@ package edu.uno.ai.sat.ex;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.PriorityQueue;
 import java.util.Random;
 
 import edu.uno.ai.sat.Assignment;
@@ -11,6 +12,7 @@ import edu.uno.ai.sat.Literal;
 import edu.uno.ai.sat.Solver;
 import edu.uno.ai.sat.Value;
 import edu.uno.ai.sat.Variable;
+import edu.uno.ai.util.MinPriorityQueue;
 
 /**
  * 
@@ -29,33 +31,6 @@ public class MahmmedSolver extends Solver {
 	public MahmmedSolver() {
 		super("mahmmed");
 	}
-
-	/*
-	@Override
-	public boolean solve(Assignment assignment) {
-		// If the problem has no variables, it is trivially true or false.
-		if(assignment.problem.variables.size() == 0)
-			return assignment.getValue() == Value.TRUE;
-		else {
-			// Keep trying until the assignment is satisfying.
-			while(assignment.getValue() != Value.TRUE) {
-				// Choose a variable whose value will be set.
-				Variable variable = chooseVariable(assignment);
-				// Choose 'true' or 'false' at random.
-				Value value;
-				if(random.nextBoolean())
-					value = Value.TRUE;
-				else
-					value = Value.FALSE;
-				// Assign the chosen value to the chosen variable.
-				assignment.setValue(variable, value);
-			}
-			// Return success. (Note, if the problem cannot be solved, this
-			// solver will run until it reaches the operations or time limit.)
-			return true;
-		}
-	}
-	*/
 	
 	@Override
 	public boolean solve(Assignment assignment) {
@@ -70,16 +45,8 @@ public class MahmmedSolver extends Solver {
 			if(assignment.getValue() == Value.TRUE) {
 				return true;
 			}
-			
-			
-			
-
-			
-
-			
-			
-//			unitPropagation
-			
+						
+			// unitPropagation
 			for (Clause clause : assignment.problem.clauses) {
 
 				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) == 1) {
@@ -105,90 +72,39 @@ public class MahmmedSolver extends Solver {
 						return true;
 					}
 				}
-				
-//				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) > 1) {
-//					
-//					for (Literal literal : clause.literals) {
-//						if(assignment.getValue(literal.variable) == Value.UNKNOWN) {
-//							if(!variableValenceCounterMap.containsKey(literal.variable)) {
-//								if(literal.valence) {
-//									variableValenceCounterMap.put(literal.variable, new ValenceCounter(1, 0));
-//								}
-//								else {
-//									variableValenceCounterMap.put(literal.variable, new ValenceCounter(0, 1));
-//								}
-//							}
-//							else {
-//								ValenceCounter valenceCounter = variableValenceCounterMap.get(literal.variable);
-//								if(literal.valence) {
-//									valenceCounter.positiveNo += 1;
-//								}
-//								else {
-//									valenceCounter.negativeNo += 1;
-//								}
-//							}
-//						}
-//						
-//					}
-//				}
 			}
 			
-			// pure variables
-			
-			HashMap<Variable, ValenceCounter> variableValenceCounterMap = new HashMap<Variable, ValenceCounter>();
-			
-			for (Clause clause : assignment.problem.clauses) {
-				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) > 1) {
+			// Detect pure variables. propagate setting pure variable.  
+			for (Variable variable : assignment.problem.variables) {
+				if(assignment.getValue(variable) == Value.UNKNOWN) {
+					double valenceDiffRatio = getValenceDiffRatio(assignment, variable);
 					
-					for (Literal literal : clause.literals) {
-						if(assignment.getValue(literal.variable) == Value.UNKNOWN) {
-							if(!variableValenceCounterMap.containsKey(literal.variable)) {
-								if(literal.valence) {
-									variableValenceCounterMap.put(literal.variable, new ValenceCounter(1, 0));
-								}
-								else {
-									variableValenceCounterMap.put(literal.variable, new ValenceCounter(0, 1));
-								}
-							}
-							else {
-								ValenceCounter valenceCounter = variableValenceCounterMap.get(literal.variable);
-								if(literal.valence) {
-									valenceCounter.positiveNo += 1;
-								}
-								else {
-									valenceCounter.negativeNo += 1;
-								}
-							}
-						}
-						
+					if(valenceDiffRatio == 1.0) {
+						// positive pure variable
+						return tryValue(assignment, variable, Value.TRUE);
 					}
-				}
-				
-			}
-			
-			for (Variable variable : variableValenceCounterMap.keySet()) {
-				ValenceCounter valenceCounter = variableValenceCounterMap.get(variable);
-				if(valenceCounter.negativeNo == 0 && valenceCounter.positiveNo > 0) {
-					// purevariable
-					return tryValue(assignment, variable, Value.TRUE);
-				}
-				else if(valenceCounter.positiveNo == 0 && valenceCounter.negativeNo > 0) {
-					// purevariable
-					return tryValue(assignment, variable, Value.FALSE);
+					
+					if(valenceDiffRatio == -1.0) {
+						// negative pure variable
+						return tryValue(assignment, variable, Value.FALSE);
+					}
 				}
 			}
 			
 
 			Variable variable = chooseUnassignedVariable(assignment);
 			
-			if(tryValue(assignment, variable, Value.TRUE)) {
-				return true;
+			
+			double valenceDiffRatio = getValenceDiffRatio(assignment, variable);
+			
+			if(valenceDiffRatio >= 0) {
+				
+				return tryValue(assignment, variable, Value.TRUE) || tryValue(assignment, variable, Value.FALSE); 
 			}
 			
-			if(tryValue(assignment, variable, Value.FALSE)) {
-				return true;
+			if(valenceDiffRatio < 0) {
+				return tryValue(assignment, variable, Value.FALSE) || tryValue(assignment, variable, Value.TRUE);
 			}
-			
 			
 			return false;
 			
@@ -208,57 +124,62 @@ public class MahmmedSolver extends Solver {
 	        return false;
         }
 	}
-
-	/**
-	 * Randomly choose a variable from the problem whose value will be set. If
-	 * any variables have the value 'unknown,' choose one of those first;
-	 * otherwise choose any variable.
-	 * 
-	 * @param assignment the assignment being worked on
-	 * @return a variable, chosen randomly
-	 */
-	private final Variable chooseVariable(Assignment assignment) {
-		// This list will hold all variables whose current value is 'unknown.'
-		ArrayList<Variable> unknown = new ArrayList<>();
-		// Loop through all the variables in the problem and find ones whose
-		// current value is 'unknown.'
-		for(Variable variable : assignment.problem.variables)
-			if(assignment.getValue(variable) == Value.UNKNOWN)
-				unknown.add(variable);
-		// If any variables are 'unknown,' choose one of them randomly.
-		if(unknown.size() > 0)
-			return unknown.get(random.nextInt(unknown.size()));
-		// Otherwise, choose any variable from the problem at random.
-		else
-			return assignment.problem.variables.get(random.nextInt(assignment.problem.variables.size()));
-	}
 	
 	private final Variable chooseUnassignedVariable(Assignment assignment) {
-		// This list will hold all variables whose current value is 'unknown.'
-		ArrayList<Variable> unknown = new ArrayList<>();
+		MinPriorityQueue<Variable> unknownPQ = new MinPriorityQueue<Variable>();
+		
 		// Loop through all the variables in the problem and find ones whose
 		// current value is 'unknown.'
 		for(Variable variable : assignment.problem.variables)
-			if(assignment.getValue(variable) == Value.UNKNOWN)
-				unknown.add(variable);
-		// If any variables are 'unknown,' choose one of them randomly.
-		if(unknown.size() > 0)
-//			return unknown.get(random.nextInt(unknown.size()));
-			return unknown.get(0);
-		// Otherwise, choose any variable from the problem at random.
+			if(assignment.getValue(variable) == Value.UNKNOWN) {
+				double valencediffRatio = getValenceDiffRatio(assignment, variable);
+				if(valencediffRatio == Double.POSITIVE_INFINITY) {
+					//totalCount = 0, means all of its clauses have value. so its value is useless.
+					continue;
+				}
+				else {
+					double absValencediffRatio = Math.abs(valencediffRatio); // scale in the range [0, 1]. 1 is the pure variable.
+					
+					// we will prioritize more value closer to 1. Higher priority value closer to 1. lower priority value closer to 0.
+					// as we are using min priority queue we will reverse the the absValencediffRatio, by subtract from 1. 
+					// so 1 - absValencediffRatio will scale [0, 1] to [1, 0]. 
+					unknownPQ.push(variable, 1 - absValencediffRatio);
+				}
+			}
+		
+		if(unknownPQ.size() > 0)
+			return unknownPQ.peek();
+		
 		else
 			return null;
 	}
 	
-	
-}
-
-class ValenceCounter{
-	int positiveNo;
-	int negativeNo;
-	
-	ValenceCounter(int pos, int neg) {
-		positiveNo = pos;
-		negativeNo = neg;
+	private final double getValenceDiffRatio(Assignment assignment, Variable variable) {
+		double posCount = 0.0;
+		double negCount = 0.0;
+		
+		
+		for (Literal literal : variable.literals) {
+			if(assignment.getValue(literal.clause) == Value.UNKNOWN) {
+				if(literal.valence) {
+					posCount += 1.0;
+				}
+				else {
+					negCount += 1.0;
+				}
+			}
+		}
+		
+		double totalCount = posCount + negCount;
+		
+		if(totalCount != 0) {
+			// between the range [-1.0 , 1.0]
+			return (posCount - negCount) / totalCount; 
+		}
+		else {
+			
+			//totalCount = 0, means all of its clauses have value. so its value is useless.  
+			return Double.POSITIVE_INFINITY;
+		}
 	}
 }
