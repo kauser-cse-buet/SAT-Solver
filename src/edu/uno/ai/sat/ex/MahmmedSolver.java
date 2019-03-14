@@ -1,6 +1,7 @@
 package edu.uno.ai.sat.ex;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -62,18 +63,20 @@ public class MahmmedSolver extends Solver {
 		if(assignment.problem.variables.size() == 0)
 			return assignment.getValue() == Value.TRUE;
 		else {
+			if(assignment.getValue() == Value.FALSE) {
+				return false;
+			}
+			
 			if(assignment.getValue() == Value.TRUE) {
 				return true;
 			}
 			
 			
-			if(assignment.getValue() == Value.FALSE) {
-				return false;
-			}
+			
 
 			
 
-
+			
 			
 //			unitPropagation
 			
@@ -102,47 +105,87 @@ public class MahmmedSolver extends Solver {
 						return true;
 					}
 				}
+				
+//				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) > 1) {
+//					
+//					for (Literal literal : clause.literals) {
+//						if(assignment.getValue(literal.variable) == Value.UNKNOWN) {
+//							if(!variableValenceCounterMap.containsKey(literal.variable)) {
+//								if(literal.valence) {
+//									variableValenceCounterMap.put(literal.variable, new ValenceCounter(1, 0));
+//								}
+//								else {
+//									variableValenceCounterMap.put(literal.variable, new ValenceCounter(0, 1));
+//								}
+//							}
+//							else {
+//								ValenceCounter valenceCounter = variableValenceCounterMap.get(literal.variable);
+//								if(literal.valence) {
+//									valenceCounter.positiveNo += 1;
+//								}
+//								else {
+//									valenceCounter.negativeNo += 1;
+//								}
+//							}
+//						}
+//						
+//					}
+//				}
 			}
 			
 			// pure variables
 			
-			for (Variable variable : assignment.problem.variables) {
-				int countTrue = 0;
-				int countFalse = 0;
-				if(assignment.getValue(variable) == Value.UNKNOWN) {
-					for (Literal literal : variable.literals) {
-						if(literal.valence) {
-							countTrue += 1;
-						}
-						else {
-							countFalse += 1;
+			HashMap<Variable, ValenceCounter> variableValenceCounterMap = new HashMap<Variable, ValenceCounter>();
+			
+			for (Clause clause : assignment.problem.clauses) {
+				if(assignment.getValue(clause) == Value.UNKNOWN && assignment.countUnknownLiterals(clause) > 1) {
+					
+					for (Literal literal : clause.literals) {
+						if(assignment.getValue(literal.variable) == Value.UNKNOWN) {
+							if(!variableValenceCounterMap.containsKey(literal.variable)) {
+								if(literal.valence) {
+									variableValenceCounterMap.put(literal.variable, new ValenceCounter(1, 0));
+								}
+								else {
+									variableValenceCounterMap.put(literal.variable, new ValenceCounter(0, 1));
+								}
+							}
+							else {
+								ValenceCounter valenceCounter = variableValenceCounterMap.get(literal.variable);
+								if(literal.valence) {
+									valenceCounter.positiveNo += 1;
+								}
+								else {
+									valenceCounter.negativeNo += 1;
+								}
+							}
 						}
 						
 					}
-					
-					if (countFalse == 0 && countTrue > 0) {
-						return tryValue(assignment, variable, Value.TRUE);
-					}
-					else if(countTrue == 0 && countFalse > 0) {
-						// its pure variable
-						return tryValue(assignment, variable, Value.FALSE);
-					}
-					
-					
 				}
 				
 			}
 			
-			
+			for (Variable variable : variableValenceCounterMap.keySet()) {
+				ValenceCounter valenceCounter = variableValenceCounterMap.get(variable);
+				if(valenceCounter.negativeNo == 0 && valenceCounter.positiveNo > 0) {
+					// purevariable
+					return tryValue(assignment, variable, Value.TRUE);
+				}
+				else if(valenceCounter.positiveNo == 0 && valenceCounter.negativeNo > 0) {
+					// purevariable
+					return tryValue(assignment, variable, Value.FALSE);
+				}
+			}
 			
 
 			Variable variable = chooseUnassignedVariable(assignment);
 			
-			if(tryValue(assignment, variable, Value.FALSE)) {
+			if(tryValue(assignment, variable, Value.TRUE)) {
 				return true;
 			}
 			
-			if(tryValue(assignment, variable, Value.TRUE)) {
+			if(tryValue(assignment, variable, Value.FALSE)) {
 				return true;
 			}
 			
@@ -151,6 +194,8 @@ public class MahmmedSolver extends Solver {
 			
 		}
 	}
+	
+	
 
 	private boolean tryValue(Assignment assignment, Variable variable, Value value) {
         Value actualValue = assignment.getValue(variable);
@@ -206,4 +251,14 @@ public class MahmmedSolver extends Solver {
 	}
 	
 	
+}
+
+class ValenceCounter{
+	int positiveNo;
+	int negativeNo;
+	
+	ValenceCounter(int pos, int neg) {
+		positiveNo = pos;
+		negativeNo = neg;
+	}
 }
